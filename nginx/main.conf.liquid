@@ -1,0 +1,61 @@
+daemon {{ daemon }};
+master_process {{ master_process }};
+worker_processes {{ worker_processes }};
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  lua_code_cache {{ lua_code_cache }};
+
+  lua_package_path "{{ lua_path }};;";
+  lua_package_cpath "{{ lua_cpath }};;";
+
+  init_by_lua_block {
+    -- code to be executed before forking workers
+  }
+
+  init_worker_by_lua_block {
+    -- code to be executed after forking workers
+  }
+
+  log_by_lua_block {
+    -- custom logging
+  }
+
+  server {
+    listen {{ port }} default_server;
+    server_name ~-(?<apicast>apicast-(staging|production))\.;
+    access_log /dev/stdout combined;
+
+    location / {
+      access_by_lua_block {
+        local resolver = require('resty.resolver'):instance()
+        local servers = resolver:get_servers(ngx.var.apicast, { port = 8080 })
+
+        if #servers == 0 then
+          ngx.status = ngx.HTTP_BAD_GATEWAY
+          ngx.exit(ngx.HTTP_OK)
+        end
+
+        ngx.ctx.apicast = servers
+      }
+
+      proxy_http_version 1.1;
+      proxy_pass $scheme://wildcard;
+      proxy_set_header Host $host;
+      proxy_set_header Connection "";
+    }
+  }
+
+  server {
+    listen {{ port }} default_server;
+    server_name _;
+    access_log /dev/stdout combined;
+
+    location / {
+      local wildcard_service = require("wildcard-service")
+    }
+  }
+}

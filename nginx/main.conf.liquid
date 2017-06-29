@@ -55,7 +55,14 @@ http {
     access_log /dev/stdout combined;
 
     location / {
-      local wildcard_service = require("wildcard-service")
+      local wildcard_service = require("wildcard-service").new();
+      local servers = wildcard_service:get_apicast_servers();
+
+      if servers
+        ngx.print(servers)
+      then
+        ngx.exit(404);
+      end
     }
   }
 }

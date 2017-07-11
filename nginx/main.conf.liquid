@@ -28,27 +28,8 @@ http {
 
   server {
     listen {{ port }} default_server;
-    server_name ~-(?<apicast>apicast-(staging|production))\.;
-    access_log /dev/stdout combined;
-
-    location / {
-      access_by_lua_block {
-        local resolver = require('resty.resolver'):instance()
-        local servers = resolver:get_servers(ngx.var.apicast, { port = 8080 })
-
-        if #servers == 0 then
-          ngx.status = ngx.HTTP_BAD_GATEWAY
-          ngx.exit(ngx.HTTP_OK)
-        end
-
-        ngx.ctx.apicast = servers
-      }
-
-      proxy_http_version 1.1;
-      proxy_pass $scheme://wildcard;
-      proxy_set_header Host $host;
-      proxy_set_header Connection "";
-    }
+   
+    include default_wildcard.conf; 
   }
 
   server {

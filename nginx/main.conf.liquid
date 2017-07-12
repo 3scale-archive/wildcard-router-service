@@ -24,45 +24,17 @@ http {
     -- custom logging
   }
 
+  include upstream_wildcard.conf;
+
   server {
     listen {{ port }} default_server;
-    server_name ~-(?<apicast>apicast-(staging|production))\.;
-    access_log /dev/stdout combined;
-
-    location / {
-      access_by_lua_block {
-        local resolver = require('resty.resolver'):instance()
-        local servers = resolver:get_servers(ngx.var.apicast, { port = 8080 })
-
-        if #servers == 0 then
-          ngx.status = ngx.HTTP_BAD_GATEWAY
-          ngx.exit(ngx.HTTP_OK)
-        end
-
-        ngx.ctx.apicast = servers
-      }
-
-      proxy_http_version 1.1;
-      proxy_pass $scheme://wildcard;
-      proxy_set_header Host $host;
-      proxy_set_header Connection "";
-    }
+   
+    include default_wildcard.conf; 
   }
 
   server {
     listen {{ port }} default_server;
-    server_name _;
-    access_log /dev/stdout combined;
-
-    location / {
-      local wildcard_service = require("wildcard-service").new();
-      local servers = wildcard_service:get_apicast_servers();
-
-      if servers
-        ngx.print(servers)
-      then
-        ngx.exit(404);
-      end
-    }
+    
+    include service_wildcard.conf;  
   }
 }

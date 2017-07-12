@@ -3,6 +3,7 @@ local cache_backend = require('resty.http_ng.backend.cache')
 local resty_backend = require('resty.http_ng.backend.resty')
 local resty_env = require('resty.env')
 local cjson = require('cjson')
+local getenv = os.getenv
 
 local _M = {
   _VERSION = '0.1'

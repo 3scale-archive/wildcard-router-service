@@ -26,6 +26,10 @@ describe('double-spec', function()
     assert.truthy(ngx)
   end)
 
+  it(':new', function ()
+    wildcard_service.new({ api_host = 'https://alaska.com' })
+  end)
+
   it(':get_apicast_servers', function()
     test_backend.expect{ url = 'https://alaska.com/admin/api/services/proxy/configs/production.json?host=api-2.alaska.apicast.io&access_token=abc' }.
       respond_with{ status = 200, body = cjson.encode({

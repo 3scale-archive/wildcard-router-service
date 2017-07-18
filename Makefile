@@ -6,3 +6,6 @@ build: rock
 
 rock:
 	luarocks make wildcard-service-scm-1.rockspec
+
+prove: 
+	TEST_NGINX_ERROR_LOG=/dev/stderr TEST_NGINX_BINARY=openresty prove

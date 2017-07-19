@@ -1,3 +1,9 @@
+env API_HOST;
+env ACCESS_TOKEN;
+env APICAST_PRODUCTION_ENDPOINT;
+env APICAST_STAGING_ENDPOINT;
+env APICAST_PORT;
+
 daemon {{ daemon }};
 master_process {{ master_process }};
 worker_processes {{ worker_processes }};
@@ -24,17 +30,17 @@ http {
     -- custom logging
   }
 
-  include upstream_wildcard.conf;
+  include "{{ nginx }}/upstream_wildcard.conf";
 
   server {
-    listen {{ port }} default_server;
+    listen {{ port }};
    
-    include default_wildcard.conf; 
+    include "{{ nginx }}/default_wildcard.conf"; 
   }
 
   server {
     listen {{ port }} default_server;
-    
-    include service_wildcard.conf;  
+      
+    include "{{ nginx }}/service_wildcard.conf"; 
   }
 }

@@ -10,3 +10,7 @@ jobs:
       - checkout
       - run: luarocks make *.rockspec
       - run: /usr/local/openresty/luajit/bin/apicast-cli busted
+      - run: prove
+      - store_artifacts:
+          path: t/servroot
+          destination: prove

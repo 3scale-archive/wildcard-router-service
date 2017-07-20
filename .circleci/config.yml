@@ -8,7 +8,7 @@ jobs:
     working_directory: /opt/app-root/wildcard_service
     steps:
       - checkout
-      - run: luarocks make *.rockspec
+      - run: luarocks make wildcard-service-scm-0.rockspec
       - run: /usr/local/openresty/luajit/bin/apicast-cli busted
       - run: prove
       - store_artifacts:

@@ -11,7 +11,7 @@ description = {
    license = "MIT"
 }
 dependencies = {
-   "apicast-cli == scm-1", "apicast == scm-1"
+   "apicast == scm-1"
 }
 build = {
    type = "builtin",

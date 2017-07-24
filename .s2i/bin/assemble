@@ -12,10 +12,12 @@ echo "---> Building application from source..."
 pushd /tmp/src/
 cp -vr /tmp/src/ /opt/app-root/wildcard-router/
 
-# FIXME: not really sure why but openresty wants to open this file
-# all configuration is set to log to stderr but still
-mkdir -p /opt/app-root/wildcard-router/logs
-chmod g+w /opt/app-root/wildcard-router/logs
+# FIXME: permissions to nginx temp directories
+
+mkdir -p /opt/app-root/wildcard-router/
+# {client_body_temp,proxy_temp,fastcgi_temp,uwsgi_temp,logs}
+chmod g+w /opt/app-root/wildcard-router/
+# {client_body_temp,proxy_temp,fastcgi_temp,uwsgi_temp,logs}
 
 # cleanup source
 rm -rf "$(pwd)"

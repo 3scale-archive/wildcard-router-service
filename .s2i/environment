@@ -1,1 +1,2 @@
 APICAST_ENV=production
+LUA_PATH=/opt/app-root/wildcard-router/src/?.lua;/opt/app-root/wildcard-router/src/?/init.lua;/opt/app/src/?.lua;;

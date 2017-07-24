@@ -1,0 +1,23 @@
+#!/bin/bash -e
+
+# Restore artifacts from the previous build (if they exist).
+#
+if [ "$(ls /tmp/artifacts/ 2>/dev/null)" ]; then
+  echo "---> Restoring build artifacts..."
+  cp -vr /tmp/artifacts/. /usr/local/openresty/luajit/
+  rm -rf /tmp/artifacts/
+fi
+
+echo "---> Building application from source..."
+pushd /tmp/src/
+cp -vr /tmp/src/ /opt/app-root/wildcard-router/
+
+# FIXME: not really sure why but openresty wants to open this file
+# all configuration is set to log to stderr but still
+mkdir -p /opt/app-root/wildcard-router/logs
+chmod g+w /opt/app-root/wildcard-router/logs
+
+# cleanup source
+rm -rf "$(pwd)"
+
+popd > /dev/null

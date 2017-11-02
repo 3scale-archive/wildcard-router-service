@@ -26,15 +26,13 @@ __DATA__
 
 === TEST 1: request though the wildcard router
 
---- main_config
-env RESOLVER=127.0.0.1:1953;
 --- http_config
   include $TEST_NGINX_UPSTREAM_CONFIG;
   lua_package_path "$TEST_NGINX_LUA_PATH";
   init_by_lua_block {
     require('resty.resolver.cache').shared():save({
-      { name = 'apicast-staging', address = '127.0.0.1' },
-      { name = 'foo-apicast-staging.example.com', address = '127.0.0.1' },
+      { name = 'apicast-staging.', address = '127.0.0.1' },
+      { name = 'foo-apicast-staging.example.com.', address = '127.0.0.1' },
     })
   }
 
@@ -60,7 +58,6 @@ Host: foo-apicast-staging.example.com
 === TEST 2: request though the wildcard router using the API
 
 --- main_config
-env RESOLVER=127.0.0.1:1953;
 env API_HOST=http://api.example.com:$TEST_NGINX_SERVER_PORT;
 env ACCESS_TOKEN=alaska-token;
 env APICAST_PORT=1950;
@@ -69,8 +66,8 @@ env APICAST_STAGING_ENDPOINT=test-apicast-staging;
   lua_package_path "$TEST_NGINX_LUA_PATH";
   init_by_lua_block {
     require('resty.resolver.cache').shared():save({
-      { name = 'test-apicast-staging', address = '127.0.0.1' },
-      { name = 'api.example.com', address = '127.0.0.1' },
+      { name = 'test-apicast-staging.', address = '127.0.0.1' },
+      { name = 'api.example.com.', address = '127.0.0.1' },
     })
   }
 

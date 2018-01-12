@@ -1,0 +1,13 @@
+luarocks {
+
+  rockspec 'wildcard-service-scm-1.rockspec',
+
+  group 'testing' {
+    module { 'busted' },
+  },
+
+  group 'development' {
+    module {'lua-resty-repl'},
+  }
+}
+

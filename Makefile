@@ -15,8 +15,9 @@ prove:
 rover:
 	rover install
 
+run: LOG_LEVEL ?= error
 run: rover
-	rover exec openresty -g 'daemon off;' -c $(PWD)/nginx/main.conf
+	rover exec openresty -g 'daemon off; error_log stderr $(LOG_LEVEL);' -c $(PWD)/nginx/main.conf
 
 dev:
 	docker run --rm -it -v $(PWD):/opt/app-root/src $(BUILDER_IMAGE) rover exec bash

@@ -11,13 +11,11 @@ description = {
    license = "MIT"
 }
 dependencies = {
-   "apicast-cli == scm-1", "apicast == scm-1"
+   "apicast == scm-1"
 }
 build = {
    type = "builtin",
    modules = {
-      ["wildcard-service.config.development"] = "config/development.lua",
-      ["wildcard-service.config.production"] = "config/production.lua",
       ["wildcard-service.init"] = "src/wildcard-service/init.lua"
    },
    install = {}

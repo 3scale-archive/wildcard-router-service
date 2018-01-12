@@ -2,7 +2,7 @@ local wildcard_service = require('wildcard-service')
 local test_backend_client = require('resty.http_ng.backend.test')
 local cjson = require('cjson')
 
-describe('double-spec', function()
+describe('wildcard router', function()
 
   local test_backend
   local service
@@ -13,8 +13,7 @@ describe('double-spec', function()
     test_backend = test_backend_client.new()
     service = wildcard_service.new({
       client = test_backend,
-      api_host = 'https://alaska.com:8081',
-      access_token = 'abc'
+      api_host = 'https://foo@alaska.com:8081'
     })
   end)
 
@@ -30,16 +29,51 @@ describe('double-spec', function()
     wildcard_service.new({ api_host = 'https://alaska.com:8081' })
   end)
 
-  it(':get_apicast_servers', function()
-    test_backend.expect{ url = 'https://alaska.com:8081/admin/api/services/proxy/configs/production.json?host=sandbox.alaska.com&access_token=abc' }.
+  describe(':servers', function()
+    it('detects apicast-staging', function()
+      test_backend.expect{ url = 'https://alaska.com:8081/master/api/domain/sandbox.alaska.com' }.
       respond_with{ status = 200, body = cjson.encode({
-        proxy_configs = {}
-    })}
-    test_backend.expect{ url = 'https://alaska.com:8081/admin/api/services/proxy/configs/sandbox.json?host=sandbox.alaska.com&access_token=abc' }.
+        apicast = { staging = true }
+      })}
+
+      assert.equal('apicast-staging', service:servers().query)
+    end)
+
+    it('detects apicast-production', function()
+      test_backend.expect{ url = 'https://alaska.com:8081/master/api/domain/sandbox.alaska.com' }.
       respond_with{ status = 200, body = cjson.encode({
-        proxy_configs = {{ proxy_config = { content = { proxy = { endpoint = 'http://production.alaska.com', sandbox_endpoint = 'http://sandbox.alaska.com' }}} }}
-    })}
-    local servers_2 = service:get_apicast_servers()
-    assert.equal('apicast-staging', servers_2.query)
+        apicast = { production = true }
+      })}
+
+      assert.equal('apicast-production', service:servers().query)
+    end)
+
+    it('detects system-master', function()
+      test_backend.expect{ url = 'https://alaska.com:8081/master/api/domain/sandbox.alaska.com' }.
+      respond_with{ status = 200, body = cjson.encode({
+        master = true, developer = true
+      })}
+
+      assert.equal('system-master', service:servers().query)
+    end)
+
+    it('detects system-provider', function()
+      test_backend.expect{ url = 'https://alaska.com:8081/master/api/domain/sandbox.alaska.com' }.
+      respond_with{ status = 200, body = cjson.encode({
+        provider = true
+      })}
+
+      assert.equal('system-provider', service:servers().query)
+    end)
+
+    it('detects system-developer', function()
+      test_backend.expect{ url = 'https://alaska.com:8081/master/api/domain/sandbox.alaska.com' }.
+      respond_with{ status = 200, body = cjson.encode({
+        developer = true
+      })}
+
+      assert.equal('system-developer', service:servers().query)
+    end)
+
   end)
 end)

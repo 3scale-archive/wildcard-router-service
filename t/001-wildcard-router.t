@@ -58,10 +58,9 @@ Host: foo-apicast-staging.example.com
 === TEST 2: request though the wildcard router using the API
 
 --- main_config
-env API_HOST=http://api.example.com:$TEST_NGINX_SERVER_PORT;
-env ACCESS_TOKEN=alaska-token;
-env APICAST_PORT=1950;
-env APICAST_STAGING_ENDPOINT=test-apicast-staging;
+env API_HOST=http://alaska-token@api.example.com:$TEST_NGINX_SERVER_PORT;
+env APICAST_STAGING_SERVICE_PORT=1950;
+env APICAST_STAGING_SERVICE=test-apicast-staging;
 --- http_config
   lua_package_path "$TEST_NGINX_LUA_PATH";
   init_by_lua_block {
@@ -84,34 +83,13 @@ env APICAST_STAGING_ENDPOINT=test-apicast-staging;
   server {
     listen $TEST_NGINX_SERVER_PORT;
     server_name api.example.com;
-    location /admin/api/services/proxy/configs/production.json {
+    location /master/api/domain/foo-apicast-staging.example.com {
         content_by_lua_block {
           local cjson = require('cjson')
           ngx.status = 200
-          ngx.say(cjson.encode({ proxy_configs = {{
-            proxy_config = { 
-              content = { 
-                proxy = { 
-                  endpoint = 'http://foo-apicast-production.example.com'
-                }
-              }
-            }
-          }}}))
-        }
-    }
-    location /admin/api/services/proxy/configs/sandbox.json {
-        content_by_lua_block {
-          local cjson = require('cjson')
-          ngx.status = 200
-          ngx.say(cjson.encode({ proxy_configs = {{
-            proxy_config = { 
-              content = { 
-                proxy = { 
-                  sandbox_endpoint = 'http://foo-apicast-staging.example.com' 
-                }
-              } 
-            }
-          }}}))
+          ngx.say(cjson.encode({
+            apicast = { staging = true }
+          }))
         }
     }
   }

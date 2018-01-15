@@ -5,9 +5,9 @@ my $pwd = cwd();
 my $nginx = $ENV{TEST_NGINX_ROOT_PATH} || "$pwd";
 
 $ENV{TEST_NGINX_LUA_PATH} = "$nginx/src/?.lua;$nginx/src/?/init.lua;;";
-$ENV{TEST_NGINX_UPSTREAM_CONFIG} = "$nginx/nginx/upstream_wildcard.conf";
-$ENV{TEST_NGINX_DEFAULT_CONFIG} = "$nginx/nginx/default_wildcard.conf";
-$ENV{TEST_NGINX_SERVICE_CONFIG} = "$nginx/nginx/service_wildcard.conf";
+$ENV{TEST_NGINX_UPSTREAM_CONFIG} = "$nginx/conf/upstream_wildcard.conf";
+$ENV{TEST_NGINX_DEFAULT_CONFIG} = "$nginx/conf/default_wildcard.conf";
+$ENV{TEST_NGINX_SERVICE_CONFIG} = "$nginx/conf/service_wildcard.conf";
 
 log_level('debug');
 repeat_each(2);

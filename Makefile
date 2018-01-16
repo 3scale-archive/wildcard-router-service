@@ -1,8 +1,10 @@
+BUILDER_IMAGE ?= quay.io/3scale/s2i-openresty-centos7:1.13.6.1-rover3
+
 test: build
-	docker run --rm wildcard-service-app /usr/libexec/s2i/run --daemon
+	docker run --rm --detach wildcard-service-app /usr/libexec/s2i/run
 
 build: lock
-	s2i build . quay.io/3scale/s2i-openresty-centos7:1.13.6.1-rover3 wildcard-service-app
+	s2i build . $(BUILDER_IMAGE) wildcard-service-app
 
 lock:
 	rover lock
@@ -15,3 +17,6 @@ rover:
 
 run: rover
 	rover exec openresty -g 'daemon off;' -c $(PWD)/nginx/main.conf
+
+dev:
+	docker run --rm -it -v $(PWD):/opt/app-root/src $(BUILDER_IMAGE) rover exec bash

@@ -1,3 +1,0 @@
-#!/bin/sh
-
-exec openresty -p /opt/app-root/wildcard-router -c nginx/main.conf -g 'daemon off; pid /tmp/nginx.pid; error_log stderr;'

@@ -2,17 +2,26 @@ version: 2
 jobs:
   build:
     docker:
-      - image: quay.io/3scale/s2i-openresty-centos7:1.11.2.3-5
+      - image: quay.io/3scale/s2i-openresty-centos7:1.13.6.1-rover3
         environment:
           TEST_NGINX_BINARY: openresty
           TEST_NGINX_ERROR_LOG: tmp/logs/prove.log
     working_directory: /opt/app-root/wildcard_service
     steps:
       - checkout
-      - run: luarocks make *.rockspec
-      - run: /usr/local/openresty/luajit/bin/apicast-cli busted
+      - restore_cache:
+          keys:
+            - rover-install-{{ arch }}-{{ checksum "Roverfile.lock" }}
+            - rover-install-{{ arch }}-{{ .Branch }}
+            - rover-install-{{ arch }}-master
+      - run: rover install
+      - save_cache:
+          key: rover-install-{{ arch }}-{{ checksum "Roverfile.lock" }}
+          paths:
+            - lua_modules
+      - run: rover exec busted
       - run: mkdir -p tmp/logs
-      - run: prove
+      - run: rover exec prove
       - store_artifacts:
           path: t/servroot
           destination: prove

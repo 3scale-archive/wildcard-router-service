@@ -4,11 +4,13 @@ local resty_backend = require('resty.http_ng.backend.resty')
 local resty_env = require('resty.env')
 local resty_resolver = require('resty.resolver')
 local resty_url = require('resty.url')
+local lrucache = require('resty.lrucache')
 local cjson = require('cjson')
 local getenv = os.getenv
 local gsub = string.gsub
 local upper = string.upper
 local setmetatable = setmetatable
+local tonumber = tonumber
 
 local _M = {
   _VERSION = '0.1'
@@ -50,24 +52,34 @@ function _M.new(options)
     system_developer = extract_service('system-developer', 3000),
   }
 
+  local cache_size = tonumber(resty_env.value('DOMAIN_CACHE_SIZE') or 100)
+  local domain_cache = lrucache.new(cache_size)
+  local domain_cache_ttl = tonumber(resty_env.value('DOMAIN_CACHE_TTL') or 60)
+
   return setmetatable({
     options = opts,
     http_client = http_client,
     api_host = api_host,
     services = services,
+    domain_cache = domain_cache,
+    domain_cache_ttl = domain_cache_ttl
   }, mt)
 end
 
-function _M:domain_info(domain)
-  local http_client = self.http_client
+-- This function is used as a callback in a timer. The first param is
+-- 'premature'. See https://github.com/openresty/lua-nginx-module#ngxtimerat
+local function get_domain_info(_, domain, self)
   local url = resty_url.join(self.api_host, '/master/api/domain/', domain)
 
-  local res = http_client.get(url)
+  local res = self.http_client.get(url)
 
   ngx.log(ngx.DEBUG, 'domain info for:  ', domain, ' from: ', url, ' status: ', res.status, ' body: ', res.body)
 
   if res.status == 200 then
-    return cjson.decode(res.body)
+    local domain_info = cjson.decode(res.body)
+    self.domain_cache:set(domain, domain_info, self.domain_cache_ttl)
+
+    return domain_info
   else
     ngx.log(ngx.WARN, 'could not get domain info for domain: ', domain, ' status: ', res.status)
     return { apicast = {} }, 'invalid'
@@ -89,7 +101,24 @@ local function resolve(service)
 end
 
 function _M:servers(host)
-  local domain_info = self:domain_info(host or _M.arg_host())
+  local domain = host or _M.arg_host()
+
+  local cached_domain_info, stale_domain_info = self.domain_cache:get(domain)
+
+  local domain_info = cached_domain_info or
+      stale_domain_info or
+      get_domain_info(false, domain, self)
+
+  -- When the cache info is stale, we use it, but also start a timer to refresh
+  -- it. This avoids blocking the request.
+  if stale_domain_info then
+    local ok, err = ngx.timer.at(0, get_domain_info, domain, self)
+    if not ok then
+      ngx.log(ngx.ERR, "failed to create timer: ", err)
+      return
+    end
+  end
+
   local services = self.services
 
   local service
